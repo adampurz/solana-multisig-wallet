@@ -1,5 +1,7 @@
 import React, { createContext, useContext } from "react";
-import { Keypair, Cluster } from "@solana/web3.js";
+import { Keypair, Cluster, Connection, Commitment, clusterApiUrl } from "@solana/web3.js";
+
+
 
 export type GlobalContextType = {
   network: Cluster | undefined;
@@ -24,3 +26,5 @@ export const GlobalContext = createContext<GlobalContextType>({
 });
 
 export const useGlobalState = () => useContext(GlobalContext);
+
+export const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
