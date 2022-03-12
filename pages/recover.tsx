@@ -16,8 +16,6 @@ const Recover: NextPage = () => {
   const { account, setAccount, setMnemonic } = useGlobalState();
 
   const handleImport = async (values: any) => {
-    console.log("Recovery functionality not implemented yet!");
-
     setLoading(true);
     const inputMnemonic = values.phrase.trim().toLowerCase();
     setMnemonic(inputMnemonic);

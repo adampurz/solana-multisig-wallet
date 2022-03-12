@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.29.0",
     "@types/styled-components": "^5.1.14",
     "antd": "^4.16.13",

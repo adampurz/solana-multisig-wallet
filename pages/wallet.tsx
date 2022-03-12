@@ -37,7 +37,7 @@ const Wallet: NextPage = () => {
 
   const airdrop = async () => {
     setAirdropLoading(true);
-    const updatedBalance = await handleAirdrop(network, account);
+    const updatedBalance = await handleAirdrop("devnet", account);
     if (typeof updatedBalance === "number") {
       setBalance(updatedBalance);
     }

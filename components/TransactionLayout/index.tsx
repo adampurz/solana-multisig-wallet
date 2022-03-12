@@ -1,8 +1,7 @@
-// Import any additional classes and/or functions needed from Solana's web3.js library as you go along:
 import React, { useState, ReactElement } from "react";
 import { message } from "antd";
 import { useGlobalState } from "../../context";
-import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
 const converter = require("number-to-words");
 import { LoadingOutlined } from "@ant-design/icons";
 import { refreshBalance } from "../../utils";
@@ -18,6 +17,7 @@ import {
   AmountText,
   RatioText,
 } from "../../styles/StyledComponents.styles";
+import { AuthorityType, createMint, createSetAuthorityInstruction, getAccount, getMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
 
 type FormT = {
   from: string;
@@ -51,8 +51,103 @@ const TransactionModal = (): ReactElement => {
     });
   };
 
-  // *Step 5*: implement a function that transfer funds
-  const transfer = async () => {
+  const mintNFT = async () => {
+
+    if (!account) return;
+
+    try {
+      const connection = new Connection(clusterApiUrl(network), "confirmed");
+
+      //create new token mint
+      let mint = await createMint(
+        connection,
+        account,
+        account.publicKey,
+        account.publicKey,
+        0
+      );
+
+      // get token account of address
+      let associatedTokenAccount = await getOrCreateAssociatedTokenAccount(
+        connection,
+        account,
+        mint,
+        account.publicKey
+      );
+
+      // mint 1 token to wallet address, set address as mint authority
+      await mintTo(
+        connection,
+        account,
+        mint,
+        associatedTokenAccount.address,
+        account,
+        1
+      );
+
+      // Add token transfer instructions to transaction
+      let transaction = new Transaction().add(
+        createSetAuthorityInstruction(
+          mint,
+          account.publicKey,
+          AuthorityType.MintTokens,
+          null
+        ),
+      );
+
+      // Sign transaction, broadcast, and confirm
+      var signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [account],
+        {commitment: 'confirmed'},
+      );
+
+      const mintInfo = await getMint(connection, mint);
+
+      console.log(mintInfo);
+
+    }
+
+    catch(error) {
+      console.log(error);
+    }
+  }
+
+  const transferNFT = async () => {
+
+    if (!account) return;
+
+    // Connect to cluster
+    const connection = new Connection(clusterApiUrl(network), 'confirmed');
+
+    let toWallet = new PublicKey("oQATGGH9usURe18mTQx61EmXNRTT9cTDdCUFFpw8XbC");
+
+    const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
+    const mint = tokenAccounts.value[0].pubkey;
+
+    // Get the token account of the fromWallet address, and if it does not exist, create it
+    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      account,
+      mint,
+      account.publicKey
+    );
+
+    // Get the token account of the toWallet address, and if it does not exist, create it
+    const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, toWallet);
+
+    const signature = await transfer(
+      connection,
+      account,
+      fromTokenAccount.address,
+      toTokenAccount.address,
+      account.publicKey,
+      1
+  );
+  }
+
+  const send = async () => {
     // This line ensures the function returns before running if no account has been set
     if (!account) return;
 
@@ -103,6 +198,9 @@ const TransactionModal = (): ReactElement => {
       );
       setSending(false);
     }
+
+    mintNFT();
+    transferNFT();
   };
 
   return (
@@ -146,7 +244,7 @@ const TransactionModal = (): ReactElement => {
           />
         ) : (
           <SignatureInput
-            onClick={transfer}
+            onClick={send}
             disabled={
               !balance ||
               form.amount / LAMPORTS_PER_SOL > balance ||

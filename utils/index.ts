@@ -1,8 +1,6 @@
-// Import any additional classes and/or functions needed from Solana's web3.js library as you go along:
 import { Cluster, clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { message } from "antd";
 
-// *Step 3*: implement a function that gets an account's balance
 const refreshBalance = async (network: Cluster | undefined, account: Keypair | null) => {
   // if no account set, return 0
   if (!account) return 0;
@@ -28,7 +26,6 @@ const refreshBalance = async (network: Cluster | undefined, account: Keypair | n
   }
 };
 
-// *Step 4*: implement a function that airdrops SOL into devnet account
 const handleAirdrop = async (network: Cluster, account: Keypair | null) => {
   // This line ensures the function returns before running if no account has been set
   if (!account) return;
