@@ -17,7 +17,7 @@ import {
   AmountText,
   RatioText,
 } from "../../styles/StyledComponents.styles";
-import { AuthorityType, createMint, createSetAuthorityInstruction, getAccount, getMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
+import { AccountLayout, AuthorityType, createMint, createSetAuthorityInstruction, getAccount, getMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
 
 type FormT = {
   from: string;
@@ -116,35 +116,42 @@ const TransactionModal = (): ReactElement => {
 
   const transferNFT = async () => {
 
-    if (!account) return;
+    try {
+      
+      if (!account) return;
 
-    // Connect to cluster
-    const connection = new Connection(clusterApiUrl(network), 'confirmed');
+      // Connect to cluster
+      const connection = new Connection(clusterApiUrl(network), 'confirmed');
 
-    let toWallet = new PublicKey("oQATGGH9usURe18mTQx61EmXNRTT9cTDdCUFFpw8XbC");
+      let toWallet = new PublicKey(form.to);
 
-    const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
-    const mint = tokenAccounts.value[0].pubkey;
+      const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
+      const mint = AccountLayout.decode(tokenAccounts.value[0].account.data).mint;
 
-    // Get the token account of the fromWallet address, and if it does not exist, create it
-    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      account,
-      mint,
-      account.publicKey
-    );
+      // Get the token account of the fromWallet address, and if it does not exist, create it
+      const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+        connection,
+        account,
+        mint,
+        account.publicKey
+      );
 
-    // Get the token account of the toWallet address, and if it does not exist, create it
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, toWallet);
+      // Get the token account of the toWallet address, and if it does not exist, create it
+      const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, toWallet);
 
-    const signature = await transfer(
-      connection,
-      account,
-      fromTokenAccount.address,
-      toTokenAccount.address,
-      account.publicKey,
-      1
-  );
+      const signature = await transfer(
+        connection,
+        account,
+        fromTokenAccount.address,
+        toTokenAccount.address,
+        account.publicKey,
+        1
+      );
+    }
+    
+    catch (error) {
+      console.log(error);
+    }
   }
 
   const send = async () => {
@@ -199,7 +206,7 @@ const TransactionModal = (): ReactElement => {
       setSending(false);
     }
 
-    mintNFT();
+    //mintNFT();
     transferNFT();
   };
 
