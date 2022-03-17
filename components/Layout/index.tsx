@@ -76,7 +76,7 @@ const Layout = ({ children }: { children: JSX.Element }): ReactElement => {
       <main className={styles.main}>
         <header className={styles.header}>
           <Link href={`/`} passHref>
-            <div className={`${styles.top} ${styles.logo}`}>MyWallet</div>
+            <div className={`${styles.top} ${styles.logo}`}>Solana NFT Wallet</div>
           </Link>
 
           <Menu
@@ -124,10 +124,7 @@ const Layout = ({ children }: { children: JSX.Element }): ReactElement => {
 
         <footer className={styles.footerHome}>
           <p>
-            MyWallet tutorial created by{" "}
-            <a className={styles.footerLink} href="https://learn.figment.io/">
-              Figment Learn
-            </a>
+            Solana NFT Wallet / Adam Purzynski 2022
           </p>
         </footer>
       </main>
