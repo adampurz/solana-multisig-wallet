@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NextPage } from "next";
 import { Button, Tooltip, Drawer, Typography } from "antd";
-import { useGlobalState } from "../context";
+import { connection, useGlobalState } from "../context";
 import { useRouter } from "next/router";
 import TransactionLayout from "../components/TransactionLayout";
 import { refreshBalance, handleAirdrop } from "../utils";

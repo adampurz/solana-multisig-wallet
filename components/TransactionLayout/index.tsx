@@ -17,7 +17,7 @@ import {
   AmountText,
   RatioText,
 } from "../../styles/StyledComponents.styles";
-import { AccountLayout, AuthorityType, createMint, createSetAuthorityInstruction, getAccount, getMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
+import { AccountLayout, AuthorityType, createMint, createMultisig, createSetAuthorityInstruction, getAccount, getMint, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID, transfer } from "@solana/spl-token";
 
 type FormT = {
   from: string;
@@ -51,105 +51,28 @@ const TransactionModal = (): ReactElement => {
     });
   };
 
-  const mintNFT = async () => {
-
-    if (!account) return;
-
+  const createMultiSigAddress = async () => {
+    
     try {
-      const connection = new Connection(clusterApiUrl(network), "confirmed");
 
-      //create new token mint
-      let mint = await createMint(
+      if (!account) return null;
+      
+      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+      
+      let signer1 = new PublicKey("FvR2WWjqgakMvNVGVXtFPgpvQMdLomtLqY3X3fccdB8E");
+      let signer2 = new PublicKey("Dx8QUUhQbgDzMA3yrHWXzEBKzLVk6HxuyAc3sECJfkmL");
+      let signer3 = new PublicKey("AepndZsGxzkwqttgUVCdbpMU8VEP8hKviKggTaT2Wn6y");
+
+      const multiSigKey = await createMultisig(
         connection,
         account,
-        account.publicKey,
-        account.publicKey,
-        0
-      );
+        [signer1, signer2, signer3],
+        2);
 
-      // get token account of address
-      let associatedTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        account,
-        mint,
-        account.publicKey
-      );
-
-      // mint 1 token to wallet address, set address as mint authority
-      await mintTo(
-        connection,
-        account,
-        mint,
-        associatedTokenAccount.address,
-        account,
-        1
-      );
-
-      // Add token transfer instructions to transaction
-      let transaction = new Transaction().add(
-        createSetAuthorityInstruction(
-          mint,
-          account.publicKey,
-          AuthorityType.MintTokens,
-          null
-        ),
-      );
-
-      // Sign transaction, broadcast, and confirm
-      var signature = await sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [account],
-        {commitment: 'confirmed'},
-      );
-
-      const mintInfo = await getMint(connection, mint);
-
-      console.log(mintInfo);
-
+      console.log(multiSigKey);
     }
 
     catch(error) {
-      console.log(error);
-    }
-  }
-
-  const transferNFT = async () => {
-
-    try {
-      
-      if (!account) return;
-
-      // Connect to cluster
-      const connection = new Connection(clusterApiUrl(network), 'confirmed');
-
-      let toWallet = new PublicKey(form.to);
-
-      const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
-      const mint = AccountLayout.decode(tokenAccounts.value[0].account.data).mint;
-
-      // Get the token account of the fromWallet address, and if it does not exist, create it
-      const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        account,
-        mint,
-        account.publicKey
-      );
-
-      // Get the token account of the toWallet address, and if it does not exist, create it
-      const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, toWallet);
-
-      const signature = await transfer(
-        connection,
-        account,
-        fromTokenAccount.address,
-        toTokenAccount.address,
-        account.publicKey,
-        1
-      );
-    }
-    
-    catch (error) {
       console.log(error);
     }
   }
@@ -205,9 +128,6 @@ const TransactionModal = (): ReactElement => {
       );
       setSending(false);
     }
-
-    //mintNFT();
-    transferNFT();
   };
 
   return (

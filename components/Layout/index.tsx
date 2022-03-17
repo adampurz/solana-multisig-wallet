@@ -60,6 +60,11 @@ const Layout = ({ children }: { children: JSX.Element }): ReactElement => {
           Wallet
         </Link>
       </Menu.Item>
+      <Menu.Item key="NFT" icon={<DownOutlined/>}>
+        <Link href="/nft" passHref>
+          NFTs
+        </Link>
+      </Menu.Item>
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
         Logout
       </Menu.Item>
