@@ -22,14 +22,14 @@ import { AccountLayout, AuthorityType, createMint, createMultisig, createSetAuth
 type FormT = {
   from: string;
   to: string;
-  amount: number;
+  amount: string;
   isSigned: boolean;
 };
 
 const defaultForm: FormT = {
   from: "",
   to: "",
-  amount: 0,
+  amount: "0",
   isSigned: false,
 };
 
@@ -40,10 +40,10 @@ const TransactionModal = (): ReactElement => {
   const [transactionSig, setTransactionSig] = useState<string>("");
 
   const onFieldChange = (field: string, value: string) => {
-    if (field === "amount" && !!value.match(/\D+/)) {
-      console.log(value);
-      return;
-    }
+    //if (field === "amount" && !!value.match(/\D+/)) {
+      //console.log(value);
+      //return;
+    //}
 
     setForm({
       ...form,
@@ -77,6 +77,40 @@ const TransactionModal = (): ReactElement => {
     }
   }
 
+  const transferNFT = async () => {
+    
+    try {
+      
+      if (!account) return;
+
+      // Connect to cluster
+      const connection = new Connection(clusterApiUrl("devnet"), 'confirmed');
+      setTransactionSig("");
+
+      //let toWallet = new PublicKey("oQATGGH9usURe18mTQx61EmXNRTT9cTDdCUFFpw8XbC");
+
+      const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
+      console.log(tokenAccounts);
+      const mint = new PublicKey(form.amount);
+      console.log(mint);
+
+      // Get the token account of the fromWallet address, and if it does not exist, create it
+      const fromTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, account.publicKey);
+
+      // Get the token account of the toWallet address, and if it does not exist, create it
+      const toTokenAccount = await getOrCreateAssociatedTokenAccount(connection, account, mint, new PublicKey(form.to));
+
+      const signature = await transfer(connection, account, fromTokenAccount.address, toTokenAccount.address, account.publicKey, 1);
+
+      setTransactionSig(signature);
+    }
+    
+    catch (error) {
+      console.log(error);
+    }
+  }
+
+
   const send = async () => {
     // This line ensures the function returns before running if no account has been set
     if (!account) return;
@@ -86,10 +120,11 @@ const TransactionModal = (): ReactElement => {
       setTransactionSig("");
       
       // create transfer instructions with account public key, public key from sender field, and amount
+
       const instructions = SystemProgram.transfer({
         fromPubkey: account.publicKey,
         toPubkey: new PublicKey(form.to),
-        lamports: form.amount,
+        lamports: Number(form.amount)
       });
 
       // create transaction object and add instructions
@@ -156,9 +191,6 @@ const TransactionModal = (): ReactElement => {
           value={form.amount}
           onChange={(e) => onFieldChange("amount", e.target.value)}
         />
-        <AmountText>
-          {form.amount <= 0 ? "" : converter.toWords(form.amount)}
-        </AmountText>
         {sending ? (
           <LoadingOutlined
             style={{
@@ -171,12 +203,12 @@ const TransactionModal = (): ReactElement => {
           />
         ) : (
           <SignatureInput
-            onClick={send}
+            onClick={isNaN(Number(form.amount)) ? transferNFT : send}
             disabled={
               !balance ||
-              form.amount / LAMPORTS_PER_SOL > balance ||
+              (!isNaN(Number(form.amount)) && (Number(form.amount) / LAMPORTS_PER_SOL > balance ||
               !form.to ||
-              form.amount == 0
+              Number(form.amount) == 0))
             }
             type="primary"
           >

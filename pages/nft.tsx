@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { Component, useEffect, useState } from "react";
 import { NextPage } from "next";
-import { Button, Tooltip, Drawer, Typography } from "antd";
+import { Button, Tooltip, Drawer, Typography, Table } from "antd";
 import { connection, useGlobalState } from "../context";
 import { useRouter } from "next/router";
 import TransactionLayout from "../components/TransactionLayout";
@@ -36,25 +36,19 @@ const Nft: NextPage = () => {
 
     const getTokenList = async () => {
 
+        let tokens: { mint: PublicKey; }[] = [];
+
         try {
           
           if (!account) return null;
           
           const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-          let tokens: { mint: PublicKey; balance: bigint; }[] = [];
     
-          const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID});
+          const tokenAccounts = await connection.getTokenAccountsByOwner(account.publicKey, {programId: TOKEN_PROGRAM_ID}).then(response => response.value);
     
-          tokenAccounts.value.forEach(element => {
-            let accountInfo = AccountLayout.decode(element.account.data);
-            tokens.push({
-              mint: new PublicKey(accountInfo.mint),
-              balance: accountInfo.amount
-            });
-          });
-    
-          console.log(tokens);
-          return tokens;
+          console.log(tokenAccounts);
+          return tokenAccounts.map(token => token.pubkey);
+        
         }
     
         catch(error) {
@@ -169,7 +163,7 @@ const Nft: NextPage = () => {
         <>
         {account && (
             <Dashboard>
-                <h1>NFT Gallery</h1>
+                <h1>NFT Menu</h1>
                 <br/>
                 <Button type="primary" onClick={mintNFT}>
                     Mint NFT <ArrowRightOutlined />
