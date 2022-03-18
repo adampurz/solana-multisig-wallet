@@ -70,6 +70,8 @@ const TransactionModal = (): ReactElement => {
         2);
 
       console.log(multiSigKey);
+
+      return multiSigKey;
     }
 
     catch(error) {
